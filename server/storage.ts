@@ -1,11 +1,12 @@
 import { db } from "./db";
-import { users, projects, projectUsers, projectMessages, userNotes } from "@shared/schema";
+import { users, projects, projectUsers, projectMessages, userNotes, projectMeetings } from "@shared/schema";
 import type {
   User, InsertUser,
   Project, InsertProject,
   ProjectUser, InsertProjectUser,
   ProjectMessage, InsertProjectMessage,
-  UserNote, InsertUserNote
+  UserNote, InsertUserNote,
+  ProjectMeeting, InsertProjectMeeting
 } from "@shared/schema";
 import { eq, and, inArray } from "drizzle-orm";
 
@@ -34,6 +35,9 @@ export interface IStorage {
 
   upsertUserNote(note: InsertUserNote): Promise<UserNote>;
   getUserNotes(projectId: number, userId: number): Promise<UserNote | undefined>;
+
+  createProjectMeeting(meeting: InsertProjectMeeting): Promise<ProjectMeeting>;
+  getProjectMeetings(projectId: number): Promise<ProjectMeeting[]>;
 }
 
 export class DbStorage implements IStorage {
@@ -183,6 +187,19 @@ export class DbStorage implements IStorage {
       .from(userNotes)
       .where(and(eq(userNotes.projectId, projectId), eq(userNotes.userId, userId)));
     return note;
+  }
+
+  async createProjectMeeting(meeting: InsertProjectMeeting): Promise<ProjectMeeting> {
+    const [created] = await db.insert(projectMeetings).values(meeting).returning();
+    return created;
+  }
+
+  async getProjectMeetings(projectId: number): Promise<ProjectMeeting[]> {
+    return await db
+      .select()
+      .from(projectMeetings)
+      .where(eq(projectMeetings.projectId, projectId))
+      .orderBy(projectMeetings.date);
   }
 }
 

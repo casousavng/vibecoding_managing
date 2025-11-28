@@ -238,6 +238,14 @@ export async function registerRoutes(
         updatedByName = updater?.name;
       }
 
+      let createdByName: string | null = null;
+      if (project.createdBy) {
+        console.log(`Looking up creator for project ${id}, createdBy: ${project.createdBy} (type: ${typeof project.createdBy})`);
+        const creator = await storage.getUser(project.createdBy);
+        console.log(`Found user:`, creator);
+        createdByName = creator?.name || null;
+      }
+
       res.json({
         ...project,
         team: teamIds,
@@ -245,6 +253,7 @@ export async function registerRoutes(
         messages,
         progress,
         updatedByName,
+        createdByName,
       });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -388,6 +397,32 @@ export async function registerRoutes(
 
       const message = await storage.createMessage(result.data);
       res.json(message);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/projects/:id/meetings", requireAuth, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const meetings = await storage.getProjectMeetings(projectId);
+      res.json(meetings);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/projects/:id/meetings", requireAuth, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const { date, feedback } = req.body;
+
+      const meeting = await storage.createProjectMeeting({
+        projectId,
+        date: new Date(date),
+        feedback,
+      });
+      res.json(meeting);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

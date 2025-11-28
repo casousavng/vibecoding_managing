@@ -90,3 +90,15 @@ export const userNotes = sqliteTable("user_notes", {
 export const insertUserNoteSchema = createInsertSchema(userNotes).omit({ id: true });
 export type InsertUserNote = z.infer<typeof insertUserNoteSchema>;
 export type UserNote = typeof userNotes.$inferSelect;
+
+export const projectMeetings = sqliteTable("project_meetings", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  projectId: integer("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  date: integer("date", { mode: "timestamp" }).notNull(),
+  feedback: text("feedback").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+});
+
+export const insertProjectMeetingSchema = createInsertSchema(projectMeetings).omit({ id: true, createdAt: true });
+export type InsertProjectMeeting = z.infer<typeof insertProjectMeetingSchema>;
+export type ProjectMeeting = typeof projectMeetings.$inferSelect;

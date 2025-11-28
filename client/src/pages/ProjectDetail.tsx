@@ -6,12 +6,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/lib/authContext";
-import { Calendar, CheckCircle2, Clock, Send, Edit2, X, Check, PanelRightClose, PanelRightOpen, RotateCcw, User, Phone, Mail, DollarSign } from "lucide-react";
+import { Calendar, CheckCircle2, Clock, Send, Edit2, X, Check, PanelRightClose, PanelRightOpen, RotateCcw, User, Phone, Mail, DollarSign, Plus } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 interface Project {
   id: number;
@@ -23,6 +24,7 @@ interface Project {
   requirements: string;
   suggestions: string;
   createdBy: number;
+  createdByName?: string;
   updatedAt?: string;
   updatedBy?: number;
   updatedByName?: string;
@@ -52,6 +54,13 @@ interface Message {
   content: string;
   timestamp: string;
   userName: string;
+}
+
+interface ProjectMeeting {
+  id: number;
+  projectId: number;
+  date: string;
+  feedback: string;
 }
 
 export default function ProjectDetail() {
@@ -85,6 +94,66 @@ export default function ProjectDetail() {
   const [allUsers, setAllUsers] = useState<{ id: number, name: string, role: string }[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<number[]>([]);
   const [isClientDetailsEditing, setIsClientDetailsEditing] = useState(false);
+  const [meetings, setMeetings] = useState<ProjectMeeting[]>([]);
+  const [isMeetingDialogOpen, setIsMeetingDialogOpen] = useState(false);
+  const [newMeetingDate, setNewMeetingDate] = useState("");
+  const [newMeetingFeedback, setNewMeetingFeedback] = useState("");
+
+  const loadMeetings = async () => {
+    if (!project) return;
+    try {
+      const res = await fetch(`/api/projects/${project.id}/meetings`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setMeetings(data);
+      }
+    } catch (err) {
+      console.error("Failed to load meetings:", err);
+    }
+  };
+
+  const handleSaveMeeting = async () => {
+    if (!project || !newMeetingDate || !newMeetingFeedback) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    setIsSaving(true);
+
+    try {
+      const res = await fetch(`/api/projects/${project.id}/meetings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          date: newMeetingDate,
+          feedback: newMeetingFeedback,
+        }),
+      });
+
+      if (res.ok) {
+        await loadMeetings();
+        setIsMeetingDialogOpen(false);
+        setNewMeetingDate("");
+        setNewMeetingFeedback("");
+        toast.success("Meeting saved successfully");
+      } else {
+        const errorData = await res.json();
+        console.error("Failed to save meeting:", errorData);
+        toast.error(`Failed to save meeting: ${errorData.message || "Unknown error"}`);
+      }
+    } catch (err) {
+      console.error("Failed to save meeting:", err);
+      toast.error("An error occurred while saving the meeting");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    if (project) {
+      loadMeetings();
+    }
+  }, [project]);
 
   const handleSaveClientDetails = async () => {
     if (!project) return;
@@ -309,6 +378,8 @@ export default function ProjectDetail() {
   const isCreator = user?.id === project.createdBy;
   const updatedDate = project.updatedAt ? new Date(project.updatedAt) : null;
 
+  console.log("Project data in render:", project);
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start gap-4">
@@ -394,6 +465,15 @@ export default function ProjectDetail() {
                   {project.progress}%
                 </div>
               </div>
+              {project.createdByName && (
+                <div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Created By</div>
+                  <div className="font-mono flex items-center gap-2">
+                    <User className="w-4 h-4 text-primary" />
+                    {project.createdByName}
+                  </div>
+                </div>
+              )}
 
             </CardContent>
           </Card>
@@ -403,7 +483,7 @@ export default function ProjectDetail() {
               <CardHeader className="pb-3 flex flex-row items-center justify-between">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <User className="w-5 h-5 text-primary" /> Client Details
-                  <Badge variant="outline" className="ml-2 text-xs font-normal text-muted-foreground border-white/10">Admin/PM Only</Badge>
+                  <Badge variant="outline" className="ml-2 text-xs font-normal text-muted-foreground border-white/10">Admin/PM Eyes Only</Badge>
                 </CardTitle>
                 {!isClientDetailsEditing && (
                   <Button
@@ -751,16 +831,89 @@ export default function ProjectDetail() {
                   </div>
                 </CardContent>
               </Card>
+
+              <Card className="bg-card/30 border-white/5">
+                <CardHeader className="pb-3 border-b border-white/5 flex flex-row items-center justify-between">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <User className="w-5 h-5 text-primary" /> Client Meetings
+                  </CardTitle>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setIsMeetingDialogOpen(true)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4">
+                  {meetings.length === 0 ? (
+                    <div className="text-sm text-muted-foreground text-center py-4">
+                      No meetings recorded yet.
+                    </div>
+                  ) : (
+                    meetings.map((meeting) => (
+                      <div key={meeting.id} className="bg-background/20 p-3 rounded-md border border-white/5">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                            <Calendar className="w-3 h-3" />
+                            {new Date(meeting.date).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{meeting.feedback}</p>
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
             </div>
           )
         }
       </div >
 
+      <Dialog open={isMeetingDialogOpen} onOpenChange={setIsMeetingDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Client Meeting</DialogTitle>
+            <DialogDescription>
+              Record a new meeting with the client.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="meetingDate">Date</Label>
+              <Input
+                id="meetingDate"
+                type="date"
+                value={newMeetingDate}
+                onChange={(e) => setNewMeetingDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="meetingFeedback">Feedback / Notes</Label>
+              <Textarea
+                id="meetingFeedback"
+                value={newMeetingFeedback}
+                onChange={(e) => setNewMeetingFeedback(e.target.value)}
+                placeholder="Enter meeting notes and client feedback..."
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setIsMeetingDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveMeeting} disabled={isSaving}>Save Meeting</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
+
       <Card className="h-[600px] flex flex-col border-white/5 bg-card/30">
         <CardHeader className="pb-3 border-b border-white/5">
-          <CardTitle className="text-lg flex items-center gap-2">
+          <CardTitle className="text-lg flex items-center justify-between">
             Timeline
-            <Badge variant="secondary" className="ml-auto text-xs">{messages.length}</Badge>
+            <Badge variant="secondary" className="text-xs">{messages.length}</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="flex-1 p-0 flex flex-col overflow-hidden">

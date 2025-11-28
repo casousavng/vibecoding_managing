@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, FolderKanban, BarChart3, Users, Settings, LogOut, Rocket, PanelLeftClose, PanelLeftOpen, Briefcase, Car, Plane, Ship, Bike, Truck, Bus, User } from "lucide-react";
+import { LayoutDashboard, FolderKanban, BarChart3, Users, Settings, LogOut, Rocket, PanelLeftClose, PanelLeftOpen, Briefcase, Car, Plane, Ship, Bike, Truck, Bus, User, FileText } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { Button } from "@/components/ui/button";
 
@@ -29,6 +29,7 @@ export function Sidebar({ isOpen, toggle }: SidebarProps) {
     { icon: LayoutDashboard, label: "Dashboard", href: "/" },
     { icon: FolderKanban, label: "Projects", href: "/projects" },
     { icon: BarChart3, label: "Metrics", href: "/metrics" },
+    { icon: FileText, label: "Exports", href: "/exports" },
     ...(user?.role === "ADMIN" ? [
       { icon: Users, label: "Users", href: "/users" },
       { icon: Settings, label: "Settings", href: "/settings" }

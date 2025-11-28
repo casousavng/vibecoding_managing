@@ -11,6 +11,7 @@ import ProjectCreate from "@/pages/ProjectCreate";
 import ProjectDetail from "@/pages/ProjectDetail";
 import Metrics from "@/pages/Metrics";
 import Users from "@/pages/Users";
+import Exports from "@/pages/Exports";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 
@@ -46,6 +47,12 @@ function Router() {
       <Route path="/metrics">
         <AppLayout>
           <Metrics />
+        </AppLayout>
+      </Route>
+
+      <Route path="/exports">
+        <AppLayout>
+          <Exports />
         </AppLayout>
       </Route>
 

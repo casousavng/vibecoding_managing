@@ -181,6 +181,7 @@ export default function ProjectCreate() {
                       selected={startDate}
                       onSelect={setStartDate}
                       initialFocus
+                      className="p-6 [--cell-size:4rem] shadow-xl rounded-xl border border-border/50 [&_td]:text-lg [&_th]:text-lg [&_button]:text-lg"
                     />
                   </PopoverContent>
                 </Popover>
@@ -206,6 +207,7 @@ export default function ProjectCreate() {
                       selected={endDate}
                       onSelect={setEndDate}
                       initialFocus
+                      className="p-6 [--cell-size:4rem] shadow-xl rounded-xl border border-border/50 [&_td]:text-lg [&_th]:text-lg [&_button]:text-lg"
                     />
                   </PopoverContent>
                 </Popover>
@@ -214,7 +216,7 @@ export default function ProjectCreate() {
 
             {(user?.role === "ADMIN" || user?.role === "PROJECT_MANAGER") && (
               <div className="space-y-4 border-t border-white/10 pt-4">
-                <h3 className="text-sm font-medium">Client Details (Admin/PM Only)</h3>
+                <h3 className="text-sm font-medium">Client Details (Admin/PM Eyes Only)</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div className="space-y-2">
                     <Label htmlFor="clientContact">Contact Person</Label>
