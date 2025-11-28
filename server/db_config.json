@@ -1,0 +1,5 @@
+{
+  "type": "local",
+  "connectionString": "postgres://avnadmin:AVNS_m5U-cDW2nIFo7nBcnBN@vibe-ispgaya-bf27.g.aivencloud.com:11682/defaultdb?sslmode=require",
+  "sqlitePath": ""
+}
