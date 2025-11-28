@@ -9,6 +9,7 @@ import { Plus, MoreHorizontal, Trash2, Loader2, Edit2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 interface User {
   id: number;
@@ -23,6 +24,7 @@ export default function Users() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const { toast } = useToast();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -141,6 +143,10 @@ export default function Users() {
       if (res.ok) {
         setPasswordResetUser(null);
         setNewPassword("");
+        toast({
+          title: "Success",
+          description: "Password updated successfully",
+        });
       } else {
         const data = await res.json();
         setError(data.message || "Failed to reset password");
@@ -149,6 +155,38 @@ export default function Users() {
       setError("Something went wrong");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResetPassword = async (user: User) => {
+    if (!confirm(`Are you sure you want to reset the password for ${user.name}? They will need to set a new password on next login.`)) return;
+
+    try {
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ passwordHash: "", mustChangePassword: true }),
+      });
+
+      if (res.ok) {
+        toast({
+          title: "Success",
+          description: "Password reset successfully. User can login with blank password.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to reset password",
+        });
+      }
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Something went wrong",
+      });
     }
   };
 
@@ -281,6 +319,11 @@ export default function Users() {
                             }}
                           >
                             <Edit2 className="w-4 h-4 mr-2" /> Change Password
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleResetPassword(user)}
+                          >
+                            <Edit2 className="w-4 h-4 mr-2" /> Reset Password
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive gap-2 cursor-pointer focus:bg-destructive/10 focus:text-destructive"

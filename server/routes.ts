@@ -34,6 +34,34 @@ export async function registerRoutes(
 
   // Auth routes
   app.post("/api/auth/login", (req, res, next) => {
+    console.log("Login attempt body:", req.body);
+    // Handle empty password login manually because passport-local rejects it
+    // Check for falsy password (empty string, null, undefined)
+    if (!req.body.password) {
+      (async () => {
+        try {
+          const user = await storage.getUserByEmail(req.body.email);
+          if (!user) {
+            return res.status(401).json({ message: "Invalid credentials" });
+          }
+          const isValid = await bcrypt.compare("", user.passwordHash);
+          if (!isValid) {
+            return res.status(401).json({ message: "Invalid credentials" });
+          }
+          req.logIn(user as any, (err) => {
+            if (err) {
+              return res.status(500).json({ message: "Login failed" });
+            }
+            const { passwordHash, ...userWithoutPassword } = user;
+            return res.json({ user: userWithoutPassword });
+          });
+        } catch (error) {
+          next(error);
+        }
+      })();
+      return;
+    }
+
     passport.authenticate("local", (err: any, user: any, info: any) => {
       if (err) {
         return res.status(500).json({ message: "Internal server error" });
@@ -117,7 +145,7 @@ export async function registerRoutes(
       const id = parseInt(req.params.id);
       const updateData = { ...req.body };
 
-      if (updateData.passwordHash) {
+      if (updateData.passwordHash !== undefined) {
         updateData.passwordHash = await bcrypt.hash(updateData.passwordHash, 10);
       }
 
