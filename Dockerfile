@@ -22,6 +22,9 @@ ENV PORT=5000
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
+# Install PostgreSQL client for migrations/seeds if needed
+RUN apk add --no-cache postgresql-client
+
 # Copy build artifacts
 COPY --from=build /app/dist ./dist
 

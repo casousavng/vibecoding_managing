@@ -3,8 +3,8 @@ import { defineConfig } from "drizzle-kit";
 export default defineConfig({
     out: "./migrations",
     schema: "../shared/schema.ts",
-    dialect: "sqlite",
+    dialect: "postgresql",
     dbCredentials: {
-        url: "sqlite.db",
+        connectionString: process.env.DATABASE_URL || "postgres://postgres:postgres@localhost:5432/vibecoding",
     },
 });

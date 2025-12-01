@@ -1,3 +1,4 @@
+
 import { db } from "./db";
 import { users, projects, projectUsers } from "@shared/schema";
 import bcrypt from "bcryptjs";
@@ -7,7 +8,7 @@ async function seed() {
 
   // Check if users already exist
   const existingUsers = await db.select().from(users);
-  if (existingUsers.length > 0) {
+  if (existingUsers && existingUsers.length > 0) {
     console.log("Database already seeded, skipping...");
     return;
   }
@@ -17,44 +18,49 @@ async function seed() {
   const pmPassword = await bcrypt.hash("pm123", 10);
   const tekkiePassword = await bcrypt.hash("tekkie123", 10);
 
+
   const [admin] = await db.insert(users).values({
     name: "Admin User",
     email: "admin@empresa.pt",
     passwordHash: adminPassword,
     role: "ADMIN",
-    mustChangePassword: true,
+    mustChangePassword: 1,
   }).returning();
+
 
   const [pm] = await db.insert(users).values({
     name: "Project Manager",
     email: "pm@empresa.pt",
     passwordHash: pmPassword,
     role: "PROJECT_MANAGER",
-    mustChangePassword: true,
+    mustChangePassword: 1,
   }).returning();
+
 
   const [alice] = await db.insert(users).values({
     name: "Alice Tekkie",
     email: "alice@empresa.pt",
     passwordHash: tekkiePassword,
     role: "TEKKIE",
-    mustChangePassword: true,
+    mustChangePassword: 1,
   }).returning();
+
 
   const [bob] = await db.insert(users).values({
     name: "Bob Coder",
     email: "bob@empresa.pt",
     passwordHash: tekkiePassword,
     role: "TEKKIE",
-    mustChangePassword: true,
+    mustChangePassword: 1,
   }).returning();
+
 
   const [charlie] = await db.insert(users).values({
     name: "Charlie Dev",
     email: "charlie@empresa.pt",
     passwordHash: tekkiePassword,
     role: "TEKKIE",
-    mustChangePassword: true,
+    mustChangePassword: 1,
   }).returning();
 
   console.log("✓ Users created");
