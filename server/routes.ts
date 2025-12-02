@@ -130,7 +130,7 @@ export async function registerRoutes(
       const user = await storage.createUser({
         ...result.data,
         passwordHash: hashedPassword,
-        mustChangePassword: true,
+        mustChangePassword: 1,
       });
 
       const { passwordHash, ...userWithoutPassword } = user;
@@ -144,6 +144,10 @@ export async function registerRoutes(
     try {
       const id = parseInt(req.params.id);
       const updateData = { ...req.body };
+
+      if (typeof updateData.mustChangePassword === "boolean") {
+        updateData.mustChangePassword = updateData.mustChangePassword ? 1 : 0;
+      }
 
       if (updateData.passwordHash !== undefined) {
         updateData.passwordHash = await bcrypt.hash(updateData.passwordHash, 10);
