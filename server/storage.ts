@@ -52,16 +52,12 @@ export class DbStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    // NOTE: `passwordHash` is assumed to be defined in the scope where this function is called,
-    // or it should be part of `insertUser` if it's meant to be passed in.
-    // For the purpose of this edit, it's included as per instruction.
-    const passwordHash = "placeholder_hash"; // Placeholder to ensure syntactical correctness
     const transportIcons = ["car", "plane", "ship", "bike", "truck", "bus"];
     const randomIcon = transportIcons[Math.floor(Math.random() * transportIcons.length)];
 
     const [user] = await db
       .insert(users)
-      .values({ ...insertUser, passwordHash, avatar: randomIcon })
+      .values({ ...insertUser, avatar: randomIcon })
       .returning();
     return user;
   }
