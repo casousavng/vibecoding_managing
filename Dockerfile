@@ -31,5 +31,5 @@ COPY --from=build /app/dist ./dist
 # Expose port
 EXPOSE 5000
 
-# Start server
-CMD ["npm", "run", "start"]
+# Start: run migrations then server
+CMD ["sh", "-c", "node dist/migrate.cjs && node dist/index.cjs"]
